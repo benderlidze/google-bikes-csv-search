@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>Google Maps Multiple Markers</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script
+        src="https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js"></script>
+
+</head>
+<style>
+    body,
+    html {
+        height: 100%;
+        width: 100%;
+        padding: 0px;
+        margin: 0px;
+    }
+
+    #searchTextField {
+        width: 50%;
+        border: none;
+        background-color: #f1f1f1;
+        padding: 15px;
+        font-size: 16px;
+        font-weight: 300;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        margin: 10px;
+        background-color: white;
+        border: #ccc 1px solid !important;
+        outline: none;
+    }
+
+    .addr {
+        margin: 10px 0px;
+        max-width: 315px;
+    }
+
+    .main {
+        background-color: #f4f4f4;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+
+    }
+
+    .location {
+        display: block;
+        background-image: url(https://upload.wikimedia.org/wikipedia/commons/f/f8/Ic_my_location_48px.svg);
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: 30px;
+        width: 30px;
+        height: 30px;
+        /* border: 1px solid gray; */
+        cursor: pointer;
+    }
+
+    .container {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
+
+<body>
+
+
+    <div class="main">
+        <div class="container">
+            <input id="searchTextField" type="text" size="25">
+            <div id="userLocation" class="location"></div>
+        </div>
+        <div id="map" style="width: 100%; height: 600px;"></div>
+    </div>
+
+
+
+    <script type="text/javascript">
+        let mainData = []
+        const userLocation = document.getElementById("userLocation");
+
+        function initMap() {
+
+            map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 5,
+                center: { lat: 55.16565763933213, lng: -4.219694827799958 },
+                // minZoom: 3, 
+                // maxZoom: 15,
+                disableDefaultUI: false,
+                draggable: true,
+                fullscreenControl: true,
+                streetViewControl: false,
+                navigationControl: false,
+                disableDoubleClickZoom: false,
+                mapTypeControl: false,
+                scrollwheel: false,
+                scaleControl: true,
+                styles: [
+                    {
+                        "featureType": "administrative",
+                        "elementType": "geometry",
+                        "stylers": [
+                            {
+                                "visibility": "off"
+                            }
+                        ]
+                    },
+                    {
+                        "featureType": "administrative.land_parcel",
+                        "stylers": [
+                            {
+                                "visibility": "off"
+                            }
+                        ]
+                    },
+                    {
+                        "featureType": "administrative.neighborhood",
+                        "stylers": [
+                            {
+                                "visibility": "off"
+                            }
+                        ]
+                    },
+                    {
+                        "featureType": "landscape.man_made",
+                        "stylers": [
+                            {
+                                "visibility": "simplified"
+                            }
+                        ]
+                    },
+                    {
+                        "featureType": "landscape.natural",
+                        "stylers": [
+                            {
+                                "lightness": 60
+                            },
+                            {
+                                "visibility": "simplified"
+                            }
+                        ]
+                    },
+                    {
+                        "featureType": "poi",
+                        "stylers": [
+                            {
+                                "visibility": "off"
+                            }
+                        ]
+                    },
+                    {
+                        "featureType": "road",
+                        "stylers": [
+                            {
+                                "visibility": "simplified"
+                            }
+                        ]
+                    },
+                    {
+                        "featureType": "road",
+                        "elementType": "labels",
+                        "stylers": [
+                            {
+                                "visibility": "off"
+                            }
+                        ]
+                    },
+                    {
+                        "featureType": "road",
+                        "elementType": "labels.icon",
+                        "stylers": [
+                            {
+                                "visibility": "off"
+                            }
+                        ]
+                    },
+                    {
+                        "featureType": "transit",
+                        "stylers": [
+                            {
+                                "visibility": "off"
+                            }
+                        ]
+                    },
+                    {
+                        "featureType": "water",
+                        "elementType": "labels.text",
+                        "stylers": [
+                            {
+                                "visibility": "off"
+                            }
+                        ]
+                    }
+                ]
+            });
+
+
+            const infoWindow = new google.maps.InfoWindow({
+                content: "",
+            });
+
+            d3.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vT6SbKj5i8Bg1GWtyUW9uE-Rd4MH1g_F2o4Opx8C4YVlYcLdhll5vzoW0DHSS-55KBcZqTy_ts9-Fc6/pub?output=csv")
+                .then(json => {
+
+                    console.log('json', json);
+                    const markers = json.map((data, i) => {
+
+                        const [lat, lng] = data.Coordinates.split(",")
+
+                        const text = `
+                            <div style="min-width:200px;">
+                                <h3>${data.name}</h3>
+                                <div class="addr"> 
+                                    ${data.description}<br>
+                                </div>
+                            </div>
+                        `
+                        var icon = {
+                            path: `M13.04,41.77c-0.11-1.29-0.35-3.2-0.99-5.42c-0.91-3.17-4.74-9.54-5.49-10.79c-3.64-6.1-5.46-9.21-5.45-12.07
+                                c0.03-4.57,2.77-7.72,3.21-8.22c0.52-0.58,4.12-4.47,9.8-4.17c4.73,0.24,7.67,3.23,8.45,4.07c0.47,0.51,3.22,3.61,3.31,8.11
+                                c0.06,3.01-1.89,6.26-5.78,12.77c-0.18,0.3-4.15,6.95-5.1,10.26c-0.64,2.24-0.89,4.17-1,5.48C13.68,41.78,13.36,41.78,13.04,41.77z
+                                `,
+                            fillColor: '#0084ff',
+                            fillOpacity: 1,
+                            strokeColor: '#ffffff',
+                            strokeWeight: 1,
+                            anchor: new google.maps.Point(14, 43),
+                            labelOrigin: new google.maps.Point(13.5, 15)
+                        }
+
+                        var marker = new google.maps.Marker({
+                            position: { lat: +lat, lng: +lng },
+                            map: map,
+                            draggable: false,
+                            icon: icon
+                        });
+
+
+                        marker.addListener("click", () => {
+                            infoWindow.setContent(text);
+                            infoWindow.open(map, marker);
+                            map.setCenter({ lat: +lat, lng: +lng })
+                        });
+
+                        return marker;
+                    });
+
+                    const image = 'svgviewer-png-output.png'
+
+                    var clusterStyles = [
+                        {
+                            textColor: 'white',
+                            url: image,
+                            height: 42,
+                            width: 42
+                        },
+                        {
+                            textColor: 'white',
+                            url: image,
+                            height: 42,
+                            width: 42
+                        },
+                        {
+                            textColor: 'white',
+                            url: image,
+                            height: 42,
+                            width: 42
+                        }
+                    ];
+
+
+                    var markerCluster = new MarkerClusterer(map, markers, {
+                        gridSize: 80,
+                        minimumClusterSize: 2,
+                        styles: clusterStyles,
+                    });
+
+                    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) && navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(function (position) {
+                            var pos = {
+                                lat: position.coords.latitude,
+                                lng: position.coords.longitude
+                            };
+                            var userMarker = new google.maps.Marker({ position: pos, map: map, title: 'userMarker', zIndex: 99999999, icon: { path: google.maps.SymbolPath.CIRCLE, scale: 6, fillColor: "#3399ff", fillOpacity: 1, strokeWeight: 0 }, });
+                            map.setCenter(pos);
+
+                        });
+                    }
+
+                })
+
+
+            const input = document.getElementById("searchTextField")
+            const autocomplete = new google.maps.places.Autocomplete(input);
+
+            autocomplete.setComponentRestrictions({
+                country: ["uk"],
+            });
+
+            google.maps.event.addListener(autocomplete, 'place_changed', function (e) {
+                var place = autocomplete.getPlace();
+                const loc = place.geometry.location;
+                map.setCenter(place.geometry.location);
+                map.setZoom(7);
+                const image =
+                    "https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png";
+                searchMarker = new google.maps.Marker({
+                    position: loc,
+                    map,
+                    // icon: image,
+                });
+                const points = mainData.filter(point => {
+                    return point.lat && point.lng
+                })
+                var center = [+place.geometry.location.lng(), +place.geometry.location.lat()];
+            });
+
+        }
+
+        userLocation.addEventListener("click", () => {
+            getUserposition()
+        })
+
+        function getUserposition() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    const lat = position.coords.latitude; // ADDED THIS
+                    const lng = position.coords.longitude; // ADDED THIS
+                    map.setCenter({ lat, lng });
+                    map.setZoom(10);
+
+                    new google.maps.Marker({
+                        position: { lat, lng },
+                        map,
+                        title: "Your position.",
+                    });
+
+                }, function () {
+                    handleLocationError(true, infoWindow, map.getCenter());
+                });
+            }
+        }
+
+        window.initMap = initMap;
+
+        function randomIntFromInterval(min, max) { // min and max included 
+            return Math.floor(Math.random() * (max - min + 1) + min)
+        }
+
+    </script>
+
+    <script
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBzfMl1G0OrMw6cdVydIA4vxiGFmX9P-TI&callback=initMap&libraries=places,drawing,geometry&v=weekly"
+        async></script>
+</body>
+
+</html>
