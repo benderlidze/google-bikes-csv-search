@@ -212,12 +212,15 @@
 
                         const [lat, lng] = data.Coordinates.split(",")
 
+
+
                         const text = `
                             <div style="min-width:200px;">
                                 <h3>${data.name}</h3>
-                                <div class="addr"> 
-                                    ${data.description}<br>
-                                </div>
+                                <div class="addr"><b>Address</b>: ${data.Address}</div>
+                                <div class="addr"><b>Postcode</b>: ${data.Postcode}</div>
+                                <div class="addr"><a href="${data.Link}" target="_blank">Link</a></div>
+                                <!-- <div class="addr">${data.Coordinates}</div> -->
                             </div>
                         `
                         var icon = {
@@ -306,7 +309,7 @@
                 var place = autocomplete.getPlace();
                 const loc = place.geometry.location;
                 map.setCenter(place.geometry.location);
-                map.setZoom(7);
+                map.setZoom(12);
                 const image =
                     "https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png";
                 searchMarker = new google.maps.Marker({
