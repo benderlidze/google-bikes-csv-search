@@ -6,7 +6,8 @@
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
     <title>Google Maps Multiple Markers</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
+    <script
+        src="https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js"></script>
 
 </head>
 <style>
@@ -206,6 +207,7 @@
             d3.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vT6SbKj5i8Bg1GWtyUW9uE-Rd4MH1g_F2o4Opx8C4YVlYcLdhll5vzoW0DHSS-55KBcZqTy_ts9-Fc6/pub?output=csv")
                 .then(json => {
 
+                    console.log('json', json);
                     const markers = json.map((data, i) => {
 
                         const [lat, lng] = data.Coordinates.split(",")
@@ -234,12 +236,13 @@
                             labelOrigin: new google.maps.Point(13.5, 15)
                         }
 
-                        const marker = new google.maps.Marker({
+                        var marker = new google.maps.Marker({
                             position: { lat: +lat, lng: +lng },
                             map: map,
                             draggable: false,
                             icon: icon
                         });
+
 
                         marker.addListener("click", () => {
                             infoWindow.setContent(text);
@@ -273,39 +276,12 @@
                         }
                     ];
 
-                    const customRenderer = {
-                        render({ count, position }) {
-                            return new google.maps.Marker({
-                                position,
-                                icon: {
-                                    url: `svgviewer-png-output.png`,
-                                    scaledSize: new google.maps.Size(50, 50),
-                                },
-                                label: {
-                                    text: count.toString(),
-                                    color: "white",
-                                    fontSize: "12px",
-                                },
-                                zIndex: Number(google.maps.Marker.MAX_ZINDEX) + count,
-                            });
-                        }
-                    };
 
-                    const markerCluster = new markerClusterer.MarkerClusterer({
-                        markers, map, map,
-                        markers,
-                        renderer: customRenderer,
-                        algorithm: new markerClusterer.GridAlgorithm({
-                                gridSize: 80,
-                                minimumClusterSize: 2, 
-                        }),
+                    var markerCluster = new MarkerClusterer(map, markers, {
+                        gridSize: 80,
+                        minimumClusterSize: 2,
+                        styles: clusterStyles,
                     });
-
-                    // var markerCluster = new MarkerClusterer(map, markers, {
-                    //     gridSize: 80,
-                    //     minimumClusterSize: 2,
-                    //     styles: clusterStyles,
-                    // });
 
                     if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) && navigator.geolocation) {
                         navigator.geolocation.getCurrentPosition(function (position) {
@@ -380,8 +356,9 @@
         }
 
     </script>
+
     <script
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBwWksUQo7kSjavFAuDjI66ggcST47ODbo&callback=initMap&libraries=places,drawing,geometry&v=weekly"
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBzfMl1G0OrMw6cdVydIA4vxiGFmX9P-TI&callback=initMap&libraries=places,drawing,geometry&v=weekly"
         async></script>
 </body>
 
